@@ -1,6 +1,6 @@
 /*:
  * @target MZ
- * @plugindesc Smartphone Web startup help shown before the title every launch.
+ * @plugindesc Smartphone Web startup help shown over the title screen every launch.
  * @author OpenAI
  *
  * @param HelpImage
@@ -12,21 +12,21 @@
  * @help
  * Crescerium_MobileHelp.js
  *
- * Shows one help image BEFORE the title screen whenever:
+ * Shows one help image OVER the title screen whenever:
  *   1) the game is running in a browser (not NW.js / Windows deployment), and
  *   2) RPG Maker MZ considers the device mobile.
  *
- * It is shown EVERY launch. No localStorage flag is used.
- * There is no home-screen / standalone-mode branch.
+ * It is shown once per browser launch. No localStorage flag is used.
+ * Returning to the title screen during the same launch will not show it again.
  *
- * Tap/click anywhere, OK, or Cancel to continue to the title screen.
+ * Tap/click anywhere, OK, or Cancel to close the help and use the title screen.
  *
  * Put:
  *   Crescerium_MobileHelp.png
  * in:
  *   img/pictures/
  *
- * PC browser and Windows deployment skip this scene.
+ * PC browser and Windows deployment skip this overlay.
  */
 (() => {
 "use strict";
@@ -35,57 +35,56 @@ const PLUGIN_NAME = "Crescerium_MobileHelp";
 const params = PluginManager.parameters(PLUGIN_NAME);
 const HELP_IMAGE = String(params.HelpImage || "Crescerium_MobileHelp");
 
+let helpShownThisLaunch = false;
+
 function isSmartphoneWeb() {
     return !Utils.isNwjs() && Utils.isMobileDevice();
 }
 
-function Scene_CresceriumMobileHelp() {
-    this.initialize(...arguments);
-}
+const _Scene_Title_create = Scene_Title.prototype.create;
+Scene_Title.prototype.create = function() {
+    _Scene_Title_create.call(this);
 
-Scene_CresceriumMobileHelp.prototype = Object.create(Scene_Base.prototype);
-Scene_CresceriumMobileHelp.prototype.constructor = Scene_CresceriumMobileHelp;
-
-Scene_CresceriumMobileHelp.prototype.initialize = function() {
-    Scene_Base.prototype.initialize.call(this);
-    this._closing = false;
+    if (isSmartphoneWeb() && !helpShownThisLaunch) {
+        this.createMobileHelpOverlay();
+    }
 };
 
-Scene_CresceriumMobileHelp.prototype.create = function() {
-    Scene_Base.prototype.create.call(this);
-    this.createBackground();
-    this.createHelpSprite();
+Scene_Title.prototype.createMobileHelpOverlay = function() {
+    helpShownThisLaunch = true;
+    this._mobileHelpVisible = true;
+
+    if (this._commandWindow) {
+        this._commandWindow.deactivate();
+    }
+
+    this._mobileHelpContainer = new Sprite();
+
+    const background = new Sprite(new Bitmap(Graphics.width, Graphics.height));
+    background.bitmap.fillAll("#07121c");
+    this._mobileHelpContainer.addChild(background);
+
+    this._mobileHelpSprite = new Sprite(ImageManager.loadPicture(HELP_IMAGE));
+    this._mobileHelpSprite.anchor.set(0.5, 0.5);
+    this._mobileHelpSprite.x = Graphics.width / 2;
+    this._mobileHelpSprite.y = Graphics.height / 2;
+    this._mobileHelpContainer.addChild(this._mobileHelpSprite);
+
+    this.addChild(this._mobileHelpContainer);
+    this.fitMobileHelpImage();
 };
 
-Scene_CresceriumMobileHelp.prototype.createBackground = function() {
-    const sprite = new Sprite(new Bitmap(Graphics.width, Graphics.height));
-    sprite.bitmap.fillAll("#07121c");
-    this.addChild(sprite);
-};
-
-Scene_CresceriumMobileHelp.prototype.createHelpSprite = function() {
-    this._helpSprite = new Sprite(ImageManager.loadPicture(HELP_IMAGE));
-    this._helpSprite.anchor.set(0.5, 0.5);
-    this._helpSprite.x = Graphics.width / 2;
-    this._helpSprite.y = Graphics.height / 2;
-    this.addChild(this._helpSprite);
-};
-
-Scene_CresceriumMobileHelp.prototype.start = function() {
-    Scene_Base.prototype.start.call(this);
-    this.fitImage();
-};
-
-Scene_CresceriumMobileHelp.prototype.fitImage = function() {
-    const bitmap = this._helpSprite.bitmap;
+Scene_Title.prototype.fitMobileHelpImage = function() {
+    const bitmap = this._mobileHelpSprite.bitmap;
     const apply = () => {
-        if (!bitmap.width || !bitmap.height) return;
+        if (!bitmap.width || !bitmap.height || !this._mobileHelpSprite) return;
         const scale = Math.min(
             Graphics.width / bitmap.width,
             Graphics.height / bitmap.height
         );
-        this._helpSprite.scale.set(scale, scale);
+        this._mobileHelpSprite.scale.set(scale, scale);
     };
+
     if (bitmap.isReady()) {
         apply();
     } else {
@@ -93,37 +92,38 @@ Scene_CresceriumMobileHelp.prototype.fitImage = function() {
     }
 };
 
-Scene_CresceriumMobileHelp.prototype.update = function() {
-    Scene_Base.prototype.update.call(this);
-    if (this._closing) return;
+const _Scene_Title_update = Scene_Title.prototype.update;
+Scene_Title.prototype.update = function() {
+    _Scene_Title_update.call(this);
+
+    if (!this._mobileHelpVisible) return;
 
     if (TouchInput.isTriggered() ||
         Input.isTriggered("ok") ||
         Input.isTriggered("cancel")) {
-        this.closeHelp();
+        this.closeMobileHelpOverlay();
     }
 };
 
-Scene_CresceriumMobileHelp.prototype.closeHelp = function() {
-    if (this._closing) return;
-    this._closing = true;
+Scene_Title.prototype.closeMobileHelpOverlay = function() {
+    if (!this._mobileHelpVisible) return;
+    this._mobileHelpVisible = false;
+
     SoundManager.playOk();
-    SceneManager.goto(Scene_Title);
-};
 
-// Intercept the normal boot-to-title transition.
-// Unlike v1, this intentionally shows the help on every mobile-web launch.
-Scene_Boot.prototype.startNormalGame = function() {
-    this.checkPlayerLocation();
-    DataManager.setupNewGame();
-
-    if (isSmartphoneWeb()) {
-        SceneManager.goto(Scene_CresceriumMobileHelp);
-    } else {
-        SceneManager.goto(Scene_Title);
+    if (this._mobileHelpContainer) {
+        this.removeChild(this._mobileHelpContainer);
+        this._mobileHelpContainer.destroy({ children: true });
+        this._mobileHelpContainer = null;
+        this._mobileHelpSprite = null;
     }
 
-    Window_TitleCommand.initCommandPosition();
+    if (this._commandWindow) {
+        this._commandWindow.activate();
+    }
+
+    TouchInput.clear();
+    Input.clear();
 };
 
 })();
