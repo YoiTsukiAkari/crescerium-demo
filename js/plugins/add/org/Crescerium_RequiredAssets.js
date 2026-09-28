@@ -22,13 +22,13 @@
  * @requiredAssets img/characters/add/sera/391679830
  * @requiredAssets img/characters/add/sera/d
  * @requiredAssets img/characters/add/sera/w
- * @requiredAssets img/enemies/add/0f/alchemist
- * @requiredAssets img/enemies/add/0f/hunter
- * @requiredAssets img/enemies/add/0f/knight
+ * @requiredAssets img/enemies/add/0f/book
+ * @requiredAssets img/enemies/add/0f/flask
+ * @requiredAssets img/enemies/add/0f/horn
  * @requiredAssets img/enemies/add/0f/light_orb_v2
- * @requiredAssets img/enemies/add/0f/lord
- * @requiredAssets img/enemies/add/0f/mage
- * @requiredAssets img/enemies/add/0f/priestess
+ * @requiredAssets img/enemies/add/0f/shield
+ * @requiredAssets img/enemies/add/0f/sword
+ * @requiredAssets img/enemies/add/0f/wand
  * @requiredAssets img/enemies/add/1f/flutter_sd_battler_v2
  * @requiredAssets img/enemies/add/1f/goblin_sd_battler_v3
  * @requiredAssets img/enemies/add/1f/magium_battler_final
@@ -58,13 +58,12 @@
  * @requiredAssets img/enemies/add/5F/fiend
  * @requiredAssets img/enemies/add/5F/ghoul
  * @requiredAssets img/enemies/add/5F/plague
+ * @requiredAssets img/enemies/add/5F/shadow_beast
  * @requiredAssets img/enemies/add/5F/skeleton
  * @requiredAssets img/enemies/add/5F/wisp_padded38
  * @requiredAssets img/enemies/add/5F/wisp_padded38_
  * @requiredAssets img/parallaxes/add/difficulity1
  * @requiredAssets img/parallaxes/add/difficulity1_resize
- * @requiredAssets img/pictures/add/Crescerium_MobileHelp
- * @requiredAssets img/pictures/add/clay/0
  * @requiredAssets img/pictures/add/clay/00001-669456540
  * @requiredAssets img/pictures/add/clay/1
  * @requiredAssets img/pictures/add/clay/14
@@ -76,10 +75,18 @@
  * @requiredAssets img/pictures/add/clay/5
  * @requiredAssets img/pictures/add/clay/6
  * @requiredAssets img/pictures/add/clay/7
+ * @requiredAssets img/pictures/add/clay/90
  * @requiredAssets img/pictures/add/clay/material_clay
+ * @requiredAssets img/pictures/add/Crescerium_MobileHelp
  * @requiredAssets img/pictures/add/difficulity1
  * @requiredAssets img/pictures/add/double/1
+ * @requiredAssets img/pictures/add/ending1
+ * @requiredAssets img/pictures/add/ending2
+ * @requiredAssets img/pictures/add/ending3
+ * @requiredAssets img/pictures/add/ending4
+ * @requiredAssets img/pictures/add/ending5
  * @requiredAssets img/pictures/add/fin
+ * @requiredAssets img/pictures/add/fin_black
  * @requiredAssets img/pictures/add/secret_file/secret_1_1
  * @requiredAssets img/pictures/add/secret_file/secret_1_2
  * @requiredAssets img/pictures/add/secret_file/secret_1_3
@@ -109,7 +116,6 @@
  * @requiredAssets img/pictures/add/secret_file/secret_5_4
  * @requiredAssets img/pictures/add/secret_file/secret_5_5
  * @requiredAssets img/pictures/add/secret_file/secret_5_6
- * @requiredAssets img/pictures/add/sera/0
  * @requiredAssets img/pictures/add/sera/1
  * @requiredAssets img/pictures/add/sera/10
  * @requiredAssets img/pictures/add/sera/11
@@ -126,6 +132,7 @@
  * @requiredAssets img/pictures/add/sera/7
  * @requiredAssets img/pictures/add/sera/8
  * @requiredAssets img/pictures/add/sera/9
+ * @requiredAssets img/pictures/add/sera/90
  * @requiredAssets img/pictures/add/sera/material_sera
  * @requiredAssets img/pictures/add/戦闘システム設計
  * @requiredAssets img/titles1/add/logo/logo

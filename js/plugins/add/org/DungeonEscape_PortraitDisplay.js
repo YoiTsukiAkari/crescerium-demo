@@ -4,7 +4,7 @@
 
 /*:ja
  * @target MZ
- * @plugindesc 「文章の表示」の名前欄からクレイ・セラの立ち絵と表情差分を自動表示するプラグイン Ver1.2.0
+ * @plugindesc 「文章の表示」の名前欄からクレイ・セラの立ち絵と表情差分を自動表示するプラグイン Ver1.2.1
  * @author DungeonEscape開発用
  *
  * @param pictureFolder
@@ -191,12 +191,11 @@
  *   (空欄)         → ナレーション行として扱い、表示中のクレイ・セラを
  *                    両方とも通常トーン(明転)にする(表示状態自体は維持)。
  *
- * 立ち絵を一時的に消したい場合は、専用の分岐は用意していません。
- * 「0」を、完全に透明なPNG画像として用意してください
- * (例: img/pictures/add/clay/0.png を透明1枚絵にする)。
- * そうすれば \0 は他の表情番号と全く同じ扱いで動作し、
- * 通常のクロスフェードでスッと消えて見えます(\N→\1などで
- * 復帰する際も同様に、通常のクロスフェードで戻ります)。
+ * 立ち絵を一時的に消すために透明PNGを表情差分として使う運用も可能です。
+ * 透明画像への切替を含む表情クロスフェードでは、フェード終了後に
+ * オーバーレイ層を実際に消去するため、以前の表情が残像として残るのを
+ * 防ぎます。また通常の消去処理でも、フェード終了後にA/B両レイヤーを
+ * 実際に消去します。
  *
  * 「\」の代わりに全角の「¥」でも認識します(例:クレイ¥2)。
  *
@@ -387,6 +386,50 @@
         }
     }
 
+    // フェードアウトしたピクチャを「透明なまま残す」のではなく、
+    // フェード完了後にGame_Screenから実際に消去するための予約。
+    // 同じピクチャ番号に新しいGame_Pictureが表示された場合は、古い予約を
+    // 無効扱いにして新しい立ち絵を誤って消さない。
+    const pendingPictureErases = new Map();
+
+    function cancelPendingErase(pictureId) {
+        pendingPictureErases.delete(pictureId);
+    }
+
+    function erasePictureNow(pictureId) {
+        cancelPendingErase(pictureId);
+        if ($gameScreen.picture(pictureId)) {
+            $gameScreen.erasePicture(pictureId);
+        }
+    }
+
+    function scheduleEraseAfterFade(pictureId, picture, duration) {
+        if (!picture) return;
+        if (duration <= 0) {
+            if ($gameScreen.picture(pictureId) === picture) {
+                $gameScreen.erasePicture(pictureId);
+            }
+            cancelPendingErase(pictureId);
+            return;
+        }
+        pendingPictureErases.set(pictureId, picture);
+    }
+
+    const _Game_Screen_update = Game_Screen.prototype.update;
+    Game_Screen.prototype.update = function () {
+        _Game_Screen_update.call(this);
+        for (const [pictureId, scheduledPicture] of pendingPictureErases) {
+            const currentPicture = this.picture(pictureId);
+            if (currentPicture !== scheduledPicture) {
+                // 同じ番号に別のピクチャが表示済みなら、古い消去予約だけ破棄する。
+                pendingPictureErases.delete(pictureId);
+            } else if (currentPicture._duration <= 0 && currentPicture.opacity() <= 0) {
+                this.erasePicture(pictureId);
+                pendingPictureErases.delete(pictureId);
+            }
+        }
+    };
+
     // ベース層(pictureIdA)は常に不透明(255)を維持し続ける。
     // 表情を変える瞬間だけ、オーバーレイ層(pictureIdB)に「変更前の絵」を
     // 100%不透明で複製表示してベース層を隠し、その裏でベース層の絵を
@@ -399,6 +442,12 @@
             const expr = expression !== null && expression !== undefined
                 ? expression
                 : defaultExpression;
+
+            // 前回のクロスフェード途中などでB層が残っていても、新規表示時には
+            // 必ず掃除してから開始する。A層はshowPictureで安全に置き換わる。
+            erasePictureNow(chara.pictureIdB);
+            cancelPendingErase(chara.pictureIdA);
+
             // 新規フェードイン(この場合のみ、ベース層自体を0→255でフェード)
             const name = pictureFileName(chara, expr);
             $gameScreen.showPicture(chara.pictureIdA, name, 1, chara.x, chara.y, scale, scale, 0, 0);
@@ -409,30 +458,42 @@
             const oldName = pictureFileName(chara, chara.currentExpression);
             const newName = pictureFileName(chara, expression);
 
+            // 直前の表情切替で透明化したB層が残っている可能性があるため、
+            // 新しいクロスフェードを始める前に実体ごと消去する。
+            erasePictureNow(chara.pictureIdB);
+            cancelPendingErase(chara.pictureIdA);
+
             // 1. 変更前の絵をオーバーレイ層に不透明のまま複製表示(ベース層を隠す)
             $gameScreen.showPicture(chara.pictureIdB, oldName, 1, chara.x, chara.y, scale, scale, 255, 0);
             // 2. ベース層を新しい表情へ瞬時に差し替え(オーバーレイに隠れて見えない)
             $gameScreen.showPicture(chara.pictureIdA, newName, 1, chara.x, chara.y, scale, scale, 255, 0);
             // 3. オーバーレイ層だけをフェードアウトし、ベース層(新表情)を見せる
-            $gameScreen.picture(chara.pictureIdB).move(1, chara.x, chara.y, scale, scale, 0, 0, duration, 0);
+            const overlayPicture = $gameScreen.picture(chara.pictureIdB);
+            overlayPicture.move(1, chara.x, chara.y, scale, scale, 0, 0, duration, 0);
+            // 4. フェード完了後、透明になったB層を実際に消去する。
+            scheduleEraseAfterFade(chara.pictureIdB, overlayPicture, duration);
 
             chara.currentExpression = expression;
         }
     }
 
     function eraseCharacter(chara, duration) {
-        if (!chara.shown) return;
+        // shownフラグがfalseでも、以前のフェード途中などでA/Bのピクチャ実体が
+        // 残っている可能性があるため、存在するものは必ず消去対象にする。
         for (const picId of [chara.pictureIdA, chara.pictureIdB]) {
             const picture = $gameScreen.picture(picId);
             if (picture) {
+                cancelPendingErase(picId);
                 picture.move(
                     picture.origin(), picture.x(), picture.y(),
                     picture.scaleX(), picture.scaleY(),
                     0, picture.blendMode(), duration, 0
                 );
+                scheduleEraseAfterFade(picId, picture, duration);
             }
         }
         chara.shown = false;
+        chara.currentExpression = null;
     }
 
     function eraseAllShown(duration) {

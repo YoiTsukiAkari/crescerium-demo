@@ -5,7 +5,7 @@
 /*:
  * @target MZ
  * @plugindesc 戦闘開始時、実際に出現している敵の「画像の実寸」を基準に
- * 隙間を詰めて並べ、画面に収まらない場合は隙間を圧縮します Ver1.4.0
+ * 隙間を詰めて並べ、画面に収まらない場合は隙間を圧縮します Ver1.4.1
  * @author DungeonEscape開発用
  *
  * @param gapX
@@ -42,6 +42,17 @@
  * 「整列」ボタンと同じ考え方）。
  *
  * 縦位置(Y座標)は元の設定のまま変更しません。
+ *
+ *
+ * ------------------------------------------------------------------
+ * ◆整列を無効化する
+ * ------------------------------------------------------------------
+ * 敵キャラのメモ欄に以下のタグを記述すると、その敵が含まれる戦闘では
+ * このプラグインによる自動整列を行いません。
+ *
+ *   <disableAutoAlign>
+ *
+ * その場合、敵はデータベース「敵グループ」で設定した位置に表示されます。
  *
  * ------------------------------------------------------------------
  * ◆Ver1.4.0での変更点
@@ -80,6 +91,17 @@
     const params = PluginManager.parameters(pluginName);
     const gapX = Number(params.gapX || 24);
     const marginX = Number(params.marginX || 20);
+
+
+    function isAutoAlignDisabled() {
+        return $gameTroop.members().some(enemy =>
+            enemy &&
+            enemy.enemy &&
+            enemy.enemy() &&
+            enemy.enemy().meta &&
+            enemy.enemy().meta.disableAutoAlign !== undefined
+        );
+    }
 
     function isVisibleEnemy(enemy) {
         if (!enemy) return false;
@@ -143,6 +165,11 @@
     Scene_Battle.prototype.update = function () {
         _Scene_Battle_update.call(this);
         if (pendingAlign) {
+            if (isAutoAlignDisabled()) {
+                pendingAlign = false;
+                return;
+            }
+
             const sprites = getVisibleSprites(this);
             if (sprites && allBitmapsReady(sprites)) {
                 alignEnemies(sprites);
