@@ -68,13 +68,13 @@
       .items()
       .some(item => item.meta.collectionItem);
     if (hasAnyCollectionItem) {
-      this.addCommand("コレクション", "collection");
+      this.addCommand(window.T ? T("コレクション") : "コレクション", "collection");
     }
     const hasAnyReferenceItem = $gameParty
       .items()
       .some(item => item.meta.referenceItem);
     if (hasAnyReferenceItem) {
-      this.addCommand("設定資料", "reference");
+      this.addCommand(window.T ? T("設定資料") : "設定資料", "reference");
     }
   };
 

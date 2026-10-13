@@ -395,21 +395,53 @@
   // セーブ一覧描画
   // ------------------------------------------------------------------
 
+  // 場所名（多言語化プラグインがあれば現在の言語に翻訳）
+  function localizedMapName(info) {
+    const name = (info && info.mapName) || "";
+    return window.T ? T(name) : name;
+  }
+
+  // 場所名の列幅：既定150px。全セーブの場所名のうち最も長いものが
+  // 収まらない場合だけ広げる（英語など長くなる言語向け）。
+  const MAP_NAME_MIN_WIDTH = 150;
+  const MAP_NAME_GAP = 12;
+
+  Window_SavefileList.prototype.mapNameColumnWidth = function() {
+    if (this._mapNameColumnWidth == null) {
+      let width = MAP_NAME_MIN_WIDTH;
+      for (const info of DataManager._globalInfo || []) {
+        const name = localizedMapName(info);
+        if (name) {
+          width = Math.max(width, this.textSizeEx(name).width + MAP_NAME_GAP);
+        }
+      }
+      this._mapNameColumnWidth = width;
+    }
+    return this._mapNameColumnWidth;
+  };
+
+  const _Window_SavefileList_refresh = Window_SavefileList.prototype.refresh;
+  Window_SavefileList.prototype.refresh = function() {
+    this._mapNameColumnWidth = null;
+    _Window_SavefileList_refresh.apply(this, arguments);
+  };
+
   const _Window_SavefileList_drawContents = Window_SavefileList.prototype.drawContents;
   Window_SavefileList.prototype.drawContents = function(info, rect) {
     _Window_SavefileList_drawContents.call(this, info, rect);
 
-    const mapName = info.mapName || "";
+    const mapName = localizedMapName(info);
     const y = rect.y + 4;
+    const nameX = rect.x + 204;
+    const nameColumnWidth = this.mapNameColumnWidth();
 
     if (mapName) {
-      const nameX = rect.x + 204;
-      this.drawTextEx(mapName, nameX, y, 160);
+      this.drawTextEx(mapName, nameX, y, nameColumnWidth);
     }
 
+    const iconX = nameX + nameColumnWidth;
     if (info.difficulty) {
       const iconIndex = difficultyIconStart + info.difficulty - 1;
-      const iconX = rect.x + 204 + 150;
       this.drawTextEx(`\\I[${iconIndex}]`, iconX, y, 40);
     }
 
@@ -428,7 +460,7 @@
     if (info.referenceComplete) badgeIcons.push(referenceCompleteIcon);
 
     if (badgeIcons.length > 0) {
-      const badgeX = rect.x + 204 + 150 + 40;
+      const badgeX = iconX + 40;
       const badgeText = badgeIcons.map(index => `\\I[${index}]`).join("");
       this.drawTextEx(badgeText, badgeX, y, 40 * badgeIcons.length + 10);
     }

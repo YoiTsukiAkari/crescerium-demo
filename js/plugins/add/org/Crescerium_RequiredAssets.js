@@ -79,6 +79,7 @@
  * @requiredAssets img/pictures/add/clay/material_clay
  * @requiredAssets img/pictures/add/Crescerium_MobileHelp
  * @requiredAssets img/pictures/add/difficulity1
+ * @requiredAssets img/pictures/add/difficulity1_en
  * @requiredAssets img/pictures/add/double/1
  * @requiredAssets img/pictures/add/ending1
  * @requiredAssets img/pictures/add/ending2
@@ -116,6 +117,11 @@
  * @requiredAssets img/pictures/add/secret_file/secret_5_4
  * @requiredAssets img/pictures/add/secret_file/secret_5_5
  * @requiredAssets img/pictures/add/secret_file/secret_5_6
+ * @requiredAssets img/pictures/add/secret_file/secret_6_1
+ * @requiredAssets img/pictures/add/secret_file/secret_6_2
+ * @requiredAssets img/pictures/add/secret_file/secret_6_3
+ * @requiredAssets img/pictures/add/secret_file/secret_6_4
+ * @requiredAssets img/pictures/add/secret_file/secret_7_1
  * @requiredAssets img/pictures/add/sera/1
  * @requiredAssets img/pictures/add/sera/10
  * @requiredAssets img/pictures/add/sera/11
@@ -148,6 +154,7 @@
  * @requiredAssets img/titles1/add/title_logo760
  * @requiredAssets img/titles1/add/title_v2
  * @requiredAssets img/titles1/add/title_v3
+ * @requiredAssets img/titles1/add/title_v3_en
  */
 (() => {
     "use strict";
