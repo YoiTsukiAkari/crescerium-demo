@@ -10,7 +10,7 @@
  * @text 言語リスト
  * @desc 「コード:表示名」をカンマ区切りで。先頭が原文言語。
  * 辞書は lang/<コード>.json を読み込む（原文言語は辞書不要）
- * @default ja:日本語,en:English
+ * @default ja:日本語,en:English,zh:简体中文
  *
  * @param optionLabel
  * @text オプション項目名
@@ -21,7 +21,7 @@
  * @text 言語別フォント
  * @desc 「コード:fontsフォルダ内のファイル名」をカンマ区切りで。
  * 指定した言語ではメインフォントを差し替える（無い字形は元のフォントで表示）
- * @default en:mplus-1p-regular-latin.woff
+ * @default en:mplus-1p-regular-latin.woff,zh:notosans-sc-subset.woff
  *
  * @param localizedImages
  * @text 言語別画像
@@ -117,7 +117,15 @@
         String(params.localizedImages !== undefined ? params.localizedImages : "titles1/add/title_v3").split(",").map(s => s.trim()).filter(s => s)
     );
     // かな・漢字・全角英数記号（「？？？」「Ｇ」など）
-    const JP_PATTERN = /[\u3040-\u30ff\u3400-\u9fff\uff01-\uff9f]/;
+    const JP_PATTERN_ALL = /[\u3040-\u30ff\u3400-\u9fff\uff01-\uff9f]/;
+    // 中国語など漢字を使う言語では、訳文自体に漢字が含まれるため「かな」で日本語を判定する
+    const JP_PATTERN_KANA = /[\u3040-\u309f\u30a0-\u30fa\u30fc-\u30ff\uff66-\uff9f]/;
+    const KANJI_LANGS = /^(zh|ko-Hani)/;
+    const JP_PATTERN = {
+        test(text) {
+            return (KANJI_LANGS.test(currentLang) ? JP_PATTERN_KANA : JP_PATTERN_ALL).test(text);
+        }
+    };
 
     //-------------------------------------------------------------------------
     // CresLoc 本体
@@ -216,6 +224,7 @@
     function translateArgument(text) {
         if (text.indexOf("・") < 0) return translate(text, true);
         const parts = text.split("・").map(part => translate(part, true));
+        if (/^zh/.test(currentLang)) return parts.join("、");
         if (parts.length === 2) return parts[0] + " and " + parts[1];
         return parts.slice(0, -1).join(", ") + ", and " + parts[parts.length - 1];
     }
@@ -734,14 +743,24 @@
     //-------------------------------------------------------------------------
     // 言語別画像
     //   原文言語以外で、登録された画像に「_言語コード」付きのファイルがあれば差し替える。
-    //   ファイルが無ければ元の画像のまま（NW.js 実行時のみ存在確認。暗号化後の .png_ にも対応）
+    //   ファイルが無ければ元の画像のまま（NW.jsはfs、ブラウザはHEADで存在確認。暗号化後の .png_ にも対応）
     //-------------------------------------------------------------------------
     const imageExistsCache = {};
     function localizedImageExists(folder, filename) {
         const url = folder + Utils.encodeURI(filename) + ".png";
         if (imageExistsCache[url] !== undefined) return imageExistsCache[url];
-        let exists = true;   // ブラウザ実行時は確認できないため、登録された画像は存在する前提
-        if (Utils.isNwjs()) {
+        let exists = false;
+        if (!Utils.isNwjs()) {
+            // ブラウザ実行時は同期HEADリクエストで確認（対象は登録画像のみ・結果はキャッシュ）
+            try {
+                const xhr = new XMLHttpRequest();
+                xhr.open("HEAD", url + (Utils.hasEncryptedImages() ? "_" : ""), false);
+                xhr.send();
+                exists = xhr.status >= 200 && xhr.status < 300;
+            } catch (e) {
+                exists = false;
+            }
+        } else {
             try {
                 const fs = require("fs");
                 const path = require("path");

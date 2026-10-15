@@ -85,5 +85,5 @@ var $plugins =
 {"name":"add/org/DungeonEscape_DamageReflect","status":true,"description":"物理反射・魔法反射ステートを追加します Ver1.0.0","parameters":{}},
 {"name":"add/org/DungeonEscape_ExtraNormalAttack","status":true,"description":"ステート中の敵に、通常行動終了後の追加通常攻撃を1回だけ行わせます Ver1.0.0","parameters":{}},
 {"name":"add/org/DungeonEscape_ExcludeTargetEnemy","status":true,"description":"スキルごとに、指定した敵キャラIDを単体対象候補から除外します Ver1.0.0","parameters":{}},
-{"name":"add/org/Crescerium_Localization","status":true,"description":"多言語化（日本語原文キー方式の言語切り替え）","parameters":{"languages":"ja:日本語,en:English","optionLabel":"Language","languageFonts":"en:mplus-1p-regular-latin.woff","localizedImages":"titles1/add/title_v3,pictures/add/difficulity1","fallbackLanguage":"en"}}
+{"name":"add/org/Crescerium_Localization","status":true,"description":"多言語化（日本語原文キー方式の言語切り替え）","parameters":{"languages":"ja:日本語,en:English,zh:简体中文","optionLabel":"Language","languageFonts":"en:mplus-1p-regular-latin.woff,zh:notosans-sc-subset.woff","localizedImages":"titles1/add/title_v3,pictures/add/difficulity1,pictures/add/Crescerium_MobileHelp","fallbackLanguage":"en"}}
 ];

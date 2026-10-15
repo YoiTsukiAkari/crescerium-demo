@@ -78,8 +78,11 @@
  * @requiredAssets img/pictures/add/clay/90
  * @requiredAssets img/pictures/add/clay/material_clay
  * @requiredAssets img/pictures/add/Crescerium_MobileHelp
+ * @requiredAssets img/pictures/add/Crescerium_MobileHelp_en
+ * @requiredAssets img/pictures/add/Crescerium_MobileHelp_zh
  * @requiredAssets img/pictures/add/difficulity1
  * @requiredAssets img/pictures/add/difficulity1_en
+ * @requiredAssets img/pictures/add/difficulity1_zh
  * @requiredAssets img/pictures/add/double/1
  * @requiredAssets img/pictures/add/ending1
  * @requiredAssets img/pictures/add/ending2
@@ -155,6 +158,7 @@
  * @requiredAssets img/titles1/add/title_v2
  * @requiredAssets img/titles1/add/title_v3
  * @requiredAssets img/titles1/add/title_v3_en
+ * @requiredAssets img/titles1/add/title_v3_zh
  */
 (() => {
     "use strict";
